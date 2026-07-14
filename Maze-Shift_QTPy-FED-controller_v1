@@ -1,0 +1,79 @@
+/*
+ Arduino QT PY controller to alternate pellet delivery between two FEDs
+
+ Last updated 7/14/26
+ Christine Liu
+
+ Connects to two different FED devices via BNCs. When the beam is broken, this controller 'activates' each FED alternatively.
+ The LED will turn on each time the beam breaker is broken
+
+ Modes on the FED devices themselves determines whether it is on:
+  Mode 1: FreeFeed
+  Mode 2: Dispense whenever a TTL pulse is received
+  Mode 3: Activated by TTL but requires a nose-poke to dispense pellet
+*/
+
+
+// variables will change:
+int sensorState = 0, activeFED = 0; // BINARY TRACKERS 0 = leftFED, 1 = rightFED
+
+//pin for bnc output
+#define beamBreaker   A0
+#define LEFTFED       A1
+#define RIGHTFED      A2
+#define LEDPIN        A3
+
+
+//how to send BNC signal
+void sendLEFT(int ms) {
+  digitalWrite(LEFTFED, HIGH);
+  delay(ms);
+  digitalWrite(LEFTFED, LOW);
+}
+
+void sendRIGHT(int ms) {
+  digitalWrite(RIGHTFED, HIGH);
+  delay(ms);
+  digitalWrite(RIGHTFED, LOW);
+}
+
+void setup() {
+  // initialize the LED pin as an output:
+  pinMode(LEDPIN, OUTPUT);
+  // initialize the sensor pin as an input:
+  pinMode(beamBreaker, INPUT_PULLUP);
+  // initalize the BNCs to FED devices as outputs, and set them to low TTL
+  pinMode(LEFTFED, OUTPUT);
+  digitalWrite(LEFTFED, LOW);  // Start LEFT FED LOW LOW
+  pinMode(RIGHTFED, OUTPUT);
+  digitalWrite(RIGHTFED, LOW); // start RIGHT FED LOW
+  Serial.begin(9600);
+}
+
+void loop(){
+  // read the state of the pushbutton value:
+  sensorState = digitalRead(beamBreaker);
+  Serial.print(digitalRead(beamBreaker));
+  // check if the sensor beam is broken
+  // if it is, the sensorState is LOW, send BNC signal and turn LED on:
+  if (sensorState == LOW) {
+    digitalWrite(LEDPIN, HIGH); // turn on the LED
+
+    // send BNC signal depending on which side should be active
+    if (activeFED == 0) {
+      sendLEFT(1000);
+    } else if (activeFED == 1) {
+      sendRIGHT(1000);
+    }
+
+    // switch which FED is active for next time the beam is broken:
+    if (activeFED == 0) {
+      activeFED = 1;
+    } else if (activeFED == 1) {
+      activeFED = 0;
+    }
+
+    digitalWrite(LEDPIN, LOW); // turns off the LED
+  }
+
+}
