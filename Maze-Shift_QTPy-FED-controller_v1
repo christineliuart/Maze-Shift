@@ -58,14 +58,14 @@ void loop(){
   // if it is, the sensorState is LOW, send BNC signal and turn LED on:
   if (sensorState == LOW) {
     digitalWrite(LEDPIN, HIGH); // turn on the LED
-
+    delay(50);
     // send BNC signal depending on which side should be active
     if (activeFED == 0) {
       sendLEFT(1000);
     } else if (activeFED == 1) {
       sendRIGHT(1000);
     }
-
+    delay(100);
     // switch which FED is active for next time the beam is broken:
     if (activeFED == 0) {
       activeFED = 1;
@@ -74,6 +74,7 @@ void loop(){
     }
 
     digitalWrite(LEDPIN, LOW); // turns off the LED
+    delay(50);
   }
 
 }
